@@ -1,8 +1,6 @@
 // TAD Fila de prioridades (FPRIO) genérica
 // Implementação com lista encadeada simples
 
-// descreve um nodo da fila de prioridades
-// NAO altere estas estruturas
 #include <stdio.h>
 #include <stdlib.h>
 #include "fprio.h"

@@ -55,6 +55,7 @@ int fila_insere (struct fila_t *f, int item)
 
 	novo_nodo->item = item;
 	novo_nodo->prox = NULL;
+	f->ult = novo_nodo;
 	f->num++;
 	return 1;
 }

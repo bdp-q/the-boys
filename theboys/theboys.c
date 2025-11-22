@@ -2,7 +2,7 @@
 // Autor: xxxxx, GRR xxxxxx
 
 // seus #includes vão aqui
-
+#include "entidades.h"
 // seus #defines vão aqui
 
 // minimize o uso de variáveis globais
@@ -11,11 +11,12 @@
 int main ()
 {
   // iniciar o mundo
-
+  struct mundo *w;
+  w = inicializa_mundo();
   // executar o laço de simulação
 
   // destruir o mundo
-
+  w = destroi_mundo(w);
   return (0) ;
 }
 

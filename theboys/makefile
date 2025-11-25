@@ -2,17 +2,17 @@
 # Carlos Maziero - DINF/UFPR, 2024/2
 
 CC      = gcc
-CFLAGS  = -Wall -Wextra -Werror -g -std=c99
+CFLAGS  = -Wall -Wextra -g -std=c99
 LDLIBS  = -lm
 MAIN    = theboys
 ENTREGA = $(MAIN)
 
 # lista de arquivos de cabeçalho (a completar)
-HDR = fila.h fprio.h conjunto.h entidades.h funcExtras.h
+HDR = fila.h fprio.h conjunto.h entidades.h universo.h funcExtras.h simulacao.h eventos.h
 
 # lista de arquivos-objeto (a completar)
 # não inclua conjunto.o, senão ele será removido com "make clean"
-OBJ = fila.o fprio.o theboys.o entidades.o funcExtras.o
+OBJ = fila.o fprio.o theboys.o universo.o funcExtras.o simulacao.o eventos.o
 
 # construir o executável
 $(MAIN): $(MAIN).o $(OBJ) conjunto.o
@@ -23,8 +23,10 @@ $(MAIN).o: $(MAIN).c $(HDR)
 # construir os TADs
 fila.o: fila.c fila.h
 fprio.o: fprio.c fprio.h
-entidades.o: entidades.c entidades.h
+universo.o: universo.c universo.h
 funcExtras.o: funcExtras.c funcExtras.h
+simulacao.o: simulacao.c simulacao.h
+eventos.o: eventos.c eventos.h
 # executar
 run: $(MAIN)
 	./$(MAIN)

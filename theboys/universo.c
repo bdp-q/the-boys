@@ -1,18 +1,12 @@
-// Arquivo que inicializa e destrói o Universo e suas entidades do the Boys
+// Arquivo que contem as funcoes de configuracao para a criacao e execucao do the Boys
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "universo.h"
 #include "entidades.h"
 #include "funcExtras.h"
-#define T_INICIO 0
-#define T_FIM_DO_MUNDO 525600
-#define N_TAMANHO_DO_MUNDO 20000
-#define N_HABILIDADES 10
-#define N_HEROIS (N_HABILIDADES * 5)
-#define N_BASES (N_HEROIS / 5)
-#define N_MISSOES (T_FIM_DO_MUNDO / 100)
-#define N_COMPOSTOS_V (N_HABILIDADES * 3)
-
+#include "fprio.h"
+#include "eventos.h"
 
 // função que define os atributos de um herói
 void inicializa_heroi(struct heroi *h, int i)
@@ -24,7 +18,7 @@ void inicializa_heroi(struct heroi *h, int i)
     h->paciencia = aleat(0,100); 
     h->velocidade = aleat(50,5000);
     qnt_habilidades = aleat(1,3);
-    h->habilidades = cjto_aleat(qnt_habilidades,3);
+    h->habilidades = cjto_aleat(qnt_habilidades,N_HABILIDADES);
 
 }
 
@@ -52,6 +46,51 @@ void inicializa_missao(struct missao *m, int i)
 
 }
 
+// coloca dentro da lef os eventos iniciais da simulacao
+void eventos_iniciais(struct mundo *w)
+{
+    int base_ini;
+    int tempo;
+
+    // inserindo os herois no mundo
+    // no id_1 vai o id do heroi e no 2 o id da base que ele chegara
+    for(int i = 0; i < w->n_herois; i++)
+    {
+        struct evento *ev;
+        if(!(ev = malloc(sizeof(struct evento))))
+            return;
+
+        base_ini = aleat(0,w->n_bases-1); 
+        tempo = aleat(0,4320);
+        ev->tempo = tempo;
+        ev->id_1 = i;
+        ev->id_2 = base_ini;
+        fprio_insere(w->lef,ev,EV_CHEGA,tempo);
+    }
+
+    // inserindo as missoes durante o ano
+     for(int i = 0; i < w->n_missoes; i++)
+    {
+        struct evento *ev;
+        if(!(ev = malloc(sizeof(struct evento))))
+            return;
+
+        tempo = aleat(0,T_FIM_DO_MUNDO);
+        ev->tempo = tempo;
+        ev->id_1 = i;
+        fprio_insere(w->lef,ev,EV_MISSAO,tempo);
+    }
+
+    // criando o evento de fim do mundo
+    struct evento *ev;
+    if(!(ev = malloc(sizeof(struct evento))))
+        return;
+
+    ev->tempo = T_FIM_DO_MUNDO;
+    fprio_insere(w->lef,ev,EV_FIM,ev->tempo);
+
+}
+
 struct mundo *inicializa_mundo()
 {
     struct mundo *w;
@@ -63,6 +102,7 @@ struct mundo *inicializa_mundo()
     w->tam_mundo.y = N_TAMANHO_DO_MUNDO;
     w->n_compostos_v = N_COMPOSTOS_V;
     w->n_habilidades = N_HABILIDADES;
+    w->lef = fprio_cria();
 
     // cria os heróis
     w->n_herois = N_HEROIS;
@@ -100,6 +140,7 @@ struct mundo *inicializa_mundo()
         inicializa_missao(w->missoes[i],i);
     }
 
+    eventos_iniciais(w);
     return w;
 }
 
@@ -131,6 +172,7 @@ struct mundo *destroi_mundo(struct mundo *w)
     }
     free(w->missoes);
 
+    fprio_destroi(w->lef);
     free(w);
     return NULL;
 }

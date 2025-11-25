@@ -2,6 +2,7 @@
 #define ENTIDADES
 #include "conjunto.h"
 #include "fila.h"
+#include "fprio.h"
 
 // ----------------------- definição dos structs que formam as entidades --------------------------------
 
@@ -58,19 +59,12 @@ struct mundo
     int n_habilidades;                  // quantidade de habilidades que existem no mundo
     int n_compostos_v;                  // quantidade de compostos v disponíveis
 
-    struct localizacao tam_mundo;        // definição do tamanho do mundo
+    struct localizacao tam_mundo;       // definição do tamanho do mundo
     int min_atual;                      // inteiro que define o minuto atual que estamos na simulação
+
+    struct fprio_t *lef;                 // lista de eventos futuros a qual a ordem dos eventos eh guardada
 };
 
 // -----------------------------------------------------------------------------------------------------
-
-// inicializa o universo e define suas entidades e características
-// retorna um ponteiro para esse universo.
-struct mundo *inicializa_mundo();
-
-
-// acaba o mundo e destrói suas entidades
-// retorna NULL.
-struct mundo * destroi_mundo(struct mundo *w);
 
 #endif

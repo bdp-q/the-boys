@@ -29,7 +29,7 @@ void inicializa_base(struct base *b, int i)
     b->local_base.x = aleat(0,N_TAMANHO_DO_MUNDO-1);
     b->local_base.y = aleat(0,N_TAMANHO_DO_MUNDO-1);
     b->n_max = aleat(3,10);
-    b->h_presentes = cjto_cria(b->n_max);
+    b->h_presentes = cjto_cria(N_HEROIS);
     b->f_espera = fila_cria();
 }
 

@@ -33,6 +33,7 @@ void evento_desiste(struct mundo *w, struct evento *ev);
 // chama o evento em que o porteiro eh avisado e deixa entrar os herois da fila ate a lotacao maxima
 void evento_avisa(struct mundo *w, struct evento *ev);
 
+// chama o evento em que o heroi entra na base e decide quanto tempo ficara la
 void evento_entra(struct mundo *w, struct evento *ev);
 
 void evento_sai(struct mundo *w, struct evento *ev);

@@ -53,16 +53,18 @@ void evento_avisa(struct mundo *w, struct evento *ev)
     int id_primeiro_da_fila;
 
     printf("%6d: AVISA  PORTEIRO BASE %d (%2d/%2d) FILA [ ",ev->tempo,
-    ev->id_2,cjto_card(w->bases[ev->id_2]->h_presentes),w->bases[ev->id_2]->n_max);
+        ev->id_2,cjto_card(w->bases[ev->id_2]->h_presentes),w->bases[ev->id_2]->n_max);
     fila_imprime(w->bases[ev->id_2]->f_espera);
     printf(" ]\n");
+    
     while (cjto_card(w->bases[ev->id_2]->h_presentes) < w->bases[ev->id_2]->n_max 
     && fila_tamanho(w->bases[ev->id_2]->f_espera) != 0)
     {
         struct evento *novo_ev;
 
         fila_retira(w->bases[ev->id_2]->f_espera,&id_primeiro_da_fila);
-        printf("%6d: AVISA PORTEIRO BASE %d ADMITE %2d\n",ev->tempo,ev->id_2,id_primeiro_da_fila);
+        cjto_insere(w->bases[ev->id_2]->h_presentes,id_primeiro_da_fila);
+        printf("%6d: AVISA  PORTEIRO BASE %d ADMITE %2d\n",ev->tempo,ev->id_2,id_primeiro_da_fila);
         
         //cria novo evento dado que entrou um evento na funcao, mas podem sair varios.
         if(!(novo_ev = malloc(sizeof(struct evento))))
@@ -79,19 +81,53 @@ void evento_avisa(struct mundo *w, struct evento *ev)
 
 void evento_entra(struct mundo *w, struct evento *ev)
 {
-    printf("entrei\n");
-    free(ev);
+    int tpb;
+
+    tpb = 15 + w->herois[ev->id_1]->paciencia * aleat(1,20);
+    printf("%6d: ENTRA  HEROI %2d BASE %d (%2d/%2d) SAI %d\n",ev->tempo,ev->id_1,
+        ev->id_2,cjto_card(w->bases[ev->id_2]->h_presentes),w->bases[ev->id_2]->n_max,
+        ev->tempo + tpb);
+    
+    ev->tempo = ev->tempo + tpb; 
+    fprio_insere(w->lef,ev,EV_SAI,ev->tempo);
 }
 
 void evento_sai(struct mundo *w, struct evento *ev)
 {
-    printf("sai");
+    struct evento *novo_ev;
+    int nova_base;
+
+    cjto_retira(w->bases[ev->id_2]->h_presentes,ev->id_1);
+    nova_base = aleat(0,w->n_bases-1);
+
+    if(!(novo_ev = malloc(sizeof(struct evento))))
+            return;
+    novo_ev->tempo = ev->tempo;
+    novo_ev->id_1 = ev->id_1;
+    novo_ev->id_2 = nova_base;
+    fprio_insere(w->lef,novo_ev,EV_VIAJA,novo_ev->tempo);
+
+    fprio_insere(w->lef,ev,EV_AVISA,ev->tempo);
+
+    printf("%6d: SAI    HEROI %2d BASE %d (%2d/%2d)\n",ev->tempo,ev->id_1,
+        ev->id_2,cjto_card(w->bases[ev->id_2]->h_presentes),w->bases[ev->id_2]->n_max);
 }
 
 void evento_viaja(struct mundo *w, struct evento *ev)
 {
-    printf("viajei");
-    free(ev);
+    int distancia_b;
+    int t_duracao;
+    
+    distancia_b = distancia_cartesiana(w->bases[w->herois[ev->id_1]->base]->local_base,
+        w->bases[ev->id_2]->local_base);
+    t_duracao = distancia_b/w->herois[ev->id_1]->velocidade;
+    
+    printf("%6d: VIAJA  HEROI %2d BASE %d BASE %d DIST %d VEL %d CHEGA %d\n",ev->tempo,
+        ev->id_1,w->herois[ev->id_1]->base,ev->id_2,distancia_b,w->herois[ev->id_1]->velocidade,
+        ev->tempo + t_duracao);
+
+    ev->tempo = ev->tempo + t_duracao;
+    fprio_insere(w->lef,ev,EV_CHEGA,ev->tempo);
 }
 
 void evento_morre(struct mundo *w, struct evento *ev)

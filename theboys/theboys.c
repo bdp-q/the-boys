@@ -15,7 +15,6 @@ int main ()
 {
   // iniciar o mundo
   struct mundo *w;
-  
   srand(11231321);
   w = inicializa_mundo();
   // executar o laço de simulação

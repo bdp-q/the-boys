@@ -137,8 +137,37 @@ void evento_morre(struct mundo *w, struct evento *ev)
 
 void evento_missao(struct mundo *w, struct evento *ev)
 {
-   // printf("missao criada\n");
-   free(ev);
+    struct cjto_t *habilidades_b;
+    int distancia_m, menor_distancia;
+    int bmp = -1;
+
+    menor_distancia = N_TAMANHO_DO_MUNDO; 
+    for (int i = 0; i < w->n_bases; i++)
+    {
+        distancia_m = distancia_cartesiana(w->missoes[ev->id_1]->local_missao,w->bases[i]->local_base);
+        
+        habilidades_b = cjto_cria(N_HABILIDADES);
+        for(int j = 0; j < N_HEROIS; j++)
+        {
+            if (w->herois[j]->base == i)
+                cjto_uniao(w->herois[j]->habilidades,habilidades_b);
+        }
+
+        if (cjto_contem(habilidades_b,w->missoes[ev->id_1]->habilidades) && distancia_m < menor_distancia)
+        {
+            bmp = i;
+            menor_distancia = distancia_m;
+        }
+        
+        if(bmp >= 0)
+            printf("possivel");
+
+        else
+            printf("impossivel");
+
+    }
+        
+    free(ev);
 }
 
 void evento_fim(struct mundo *w, struct evento *ev)

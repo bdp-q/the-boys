@@ -15,7 +15,7 @@ void inicializa_heroi(struct heroi *h, int i)
 
     h->id = i;
     h->xp = 0;
-    h->base = -1;
+    h->base = aleat(0,N_BASES-1);
     h->paciencia = aleat(0,100); 
     h->velocidade = aleat(50,5000);
     qnt_habilidades = aleat(1,3);

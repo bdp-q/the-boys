@@ -10,7 +10,6 @@ void evento_chega(struct mundo *w, struct evento *ev)
 {
     int espera;
 
-    w->herois[ev->id_1]->base = ev->id_2;
     if ((cjto_card(w->bases[ev->id_2]->h_presentes) < w->bases[ev->id_2]->n_max)
     && (fila_tamanho(w->bases[ev->id_2]->f_espera) == 0))
         espera = 1;
@@ -89,6 +88,7 @@ void evento_entra(struct mundo *w, struct evento *ev)
 {
     int tpb;
 
+    w->herois[ev->id_1]->base = ev->id_2;
     tpb = 15 + w->herois[ev->id_1]->paciencia * aleat(1,20);
     printf("%6d: ENTRA  HEROI %2d BASE %d (%2d/%2d) SAI %d\n",ev->tempo,ev->id_1,
         ev->id_2,cjto_card(w->bases[ev->id_2]->h_presentes),w->bases[ev->id_2]->n_max,
@@ -123,13 +123,20 @@ void evento_sai(struct mundo *w, struct evento *ev)
 
     printf("%6d: SAI    HEROI %2d BASE %d (%2d/%2d)\n",ev->tempo,ev->id_1,
         ev->id_2,cjto_card(w->bases[ev->id_2]->h_presentes),w->bases[ev->id_2]->n_max);
+
 }
 
 void evento_viaja(struct mundo *w, struct evento *ev)
 {
     int distancia_b;
     int t_duracao;
-    
+
+    if(w->herois[ev->id_1]->base < 0)
+    {
+        free(ev);
+        return;
+    }
+
     distancia_b = distancia_cartesiana(w->bases[w->herois[ev->id_1]->base]->local_base,
         w->bases[ev->id_2]->local_base);
     t_duracao = distancia_b/w->herois[ev->id_1]->velocidade;
@@ -181,7 +188,7 @@ void evento_missao(struct mundo *w, struct evento *ev)
         // descobre o conjunto de habilidades da base percorrendo cada heroi
         for(int j = 0; j < w->n_herois; j++)
         {
-            if (w->herois[j]->base == i)
+            if (w->herois[j]->base == i )
             {
                 aux = cjto_uniao(w->herois[j]->habilidades,habilidades_b);
                 cjto_destroi(habilidades_b);

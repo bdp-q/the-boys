@@ -1,3 +1,4 @@
+// Arquivo que descreve as funcoes que criam a lógica dos eventos
 #include <stdio.h>
 #include <stdlib.h>
 #include "eventos.h"
@@ -28,8 +29,6 @@ void evento_chega(struct mundo *w, struct evento *ev)
         printf("%6d: CHEGA  HEROI %2d BASE %d (%2d/%2d) DESISTE\n",ev->tempo,ev->id_1,
         ev->id_2,cjto_card(w->bases[ev->id_2]->h_presentes),w->bases[ev->id_2]->n_max);
     }
-    
-    return; //boto ou nao :( perguntar castilho
 }
 
 void evento_espera(struct mundo *w, struct evento *ev)
@@ -37,7 +36,14 @@ void evento_espera(struct mundo *w, struct evento *ev)
     printf("%6d: ESPERA HEROI %2d BASE %d (%2d)\n",ev->tempo,ev->id_1,
     ev->id_2,fila_tamanho(w->bases[ev->id_2]->f_espera));
     
-    fila_insere(w->bases[ev->id_2]->f_espera,ev->id_1);   
+    fila_insere(w->bases[ev->id_2]->f_espera,ev->id_1);
+
+    /*  checa se alcancou o maior tamanho de fila da base.
+        como o evento espera sempre insere apenas uma pessoa, podemos garantir que sempre sera + 1
+        o novo recorde. */
+    if (fila_tamanho(w->bases[ev->id_2]->f_espera) > w->bases[ev->id_2]->f_max)
+        w->bases[ev->id_2]->f_max++;
+    
     fprio_insere(w->lef,ev,EV_AVISA,ev->tempo);
 }
 
@@ -75,7 +81,7 @@ void evento_avisa(struct mundo *w, struct evento *ev)
 
         fprio_insere(w->lef,novo_ev,EV_ENTRA,novo_ev->tempo);
     }
-    // libera o ev antigo que acabou
+    // libera o ev antigo que nao consegue mais ser reutilizado
     free(ev);
 }
 
@@ -96,6 +102,12 @@ void evento_sai(struct mundo *w, struct evento *ev)
 {
     struct evento *novo_ev;
     int nova_base;
+
+    if(w->herois[ev->id_1]->morto == 1)
+    {
+        free(ev);
+        return;
+    }
 
     cjto_retira(w->bases[ev->id_2]->h_presentes,ev->id_1);
     nova_base = aleat(0,w->n_bases-1);
@@ -132,47 +144,168 @@ void evento_viaja(struct mundo *w, struct evento *ev)
 
 void evento_morre(struct mundo *w, struct evento *ev)
 {
-    printf("morri");
+    printf("%6d: MORRE  HEROI %2d MISSAO %d\n",ev->tempo,ev->id_1,ev->id_2);
+
+    w->herois[ev->id_1]->morto = 1;
+    ev->id_2 = w->herois[ev->id_1]->base;
+    cjto_retira(w->bases[ev->id_2]->h_presentes,ev->id_1);
+    fprio_insere(w->lef,ev,EV_AVISA,ev->tempo);
+    w->herois[ev->id_1]->base = -1;
 }
 
 void evento_missao(struct mundo *w, struct evento *ev)
 {
-    struct cjto_t *habilidades_b;
-    int distancia_m, menor_distancia;
+    struct cjto_t *habilidades_b, *aux,*habilidades_b_vencedora = NULL;
+    int distancia_m, menor_distancia, menor_distancia_com_hab;
     int bmp = -1;
+    int bmp_com_habilidades = -1;
 
-    menor_distancia = N_TAMANHO_DO_MUNDO; 
+    menor_distancia = N_TAMANHO_DO_MUNDO * N_TAMANHO_DO_MUNDO;
+    menor_distancia_com_hab = menor_distancia;
+
+    printf("%6d: MISSAO %d TENT %d HAB REQ: [ ",ev->tempo,ev->id_1,w->missoes[ev->id_1]->tentativas);
+    cjto_imprime(w->missoes[ev->id_1]->habilidades);
+    printf(" ]\n");
+    
+    w->total_tent++;
+    w->missoes[ev->id_1]->tentativas++;
+    if(w->missoes[ev->id_1]->tentativas > w->tent_max)
+            w->tent_max = w->missoes[ev->id_1]->tentativas;
+
+
     for (int i = 0; i < w->n_bases; i++)
     {
         distancia_m = distancia_cartesiana(w->missoes[ev->id_1]->local_missao,w->bases[i]->local_base);
         
         habilidades_b = cjto_cria(N_HABILIDADES);
-        for(int j = 0; j < N_HEROIS; j++)
+        // descobre o conjunto de habilidades da base percorrendo cada heroi
+        for(int j = 0; j < w->n_herois; j++)
         {
             if (w->herois[j]->base == i)
-                cjto_uniao(w->herois[j]->habilidades,habilidades_b);
+            {
+                aux = cjto_uniao(w->herois[j]->habilidades,habilidades_b);
+                cjto_destroi(habilidades_b);
+                habilidades_b = aux;
+            }   
         }
-
-        if (cjto_contem(habilidades_b,w->missoes[ev->id_1]->habilidades) && distancia_m < menor_distancia)
+        //descobre qual eh a base mais proxima com pessoas
+        if (distancia_m < menor_distancia && cjto_card(w->bases[i]->h_presentes) != 0)
         {
             bmp = i;
             menor_distancia = distancia_m;
         }
+        //descobre qual eh a base mais proxima com habilidades
+        if (cjto_contem(habilidades_b,w->missoes[ev->id_1]->habilidades) && distancia_m < menor_distancia_com_hab)
+        {
+            bmp_com_habilidades = i;
+            menor_distancia_com_hab = distancia_m;
+            if(habilidades_b_vencedora)
+                cjto_destroi(habilidades_b_vencedora);
+
+            habilidades_b_vencedora = cjto_copia(habilidades_b);
+        }
         
-        if(bmp >= 0)
-            printf("possivel");
-
-        else
-            printf("impossivel");
-
+        cjto_destroi(habilidades_b);
     }
+
+    if(bmp_com_habilidades >= 0)
+    {
+        printf("%6d: MISSAO %d CUMPRIDA BASE %d HABS: [ ",ev->tempo,ev->id_1,bmp_com_habilidades);
+        cjto_imprime(habilidades_b_vencedora);
+        printf(" ]\n");
+        // da a experiencia para os herois da base que a missao foi concluida
+        for (int i =0; i < w->n_herois; i++)
+            if (w->herois[i]->base == bmp_com_habilidades)
+                w->herois[i]->xp++;
+
+        w->bases[bmp_com_habilidades]->missoes++;
+        w->n_missoes_concluidas++;
         
-    free(ev);
+        if(w->missoes[ev->id_1]->tentativas < w->tent_min)
+            w->tent_min = w->missoes[ev->id_1]->tentativas;
+
+        free(ev);
+        return;
+    }
+
+    printf("%6d: MISSAO %d IMPOSSIVEL\n",ev->tempo,ev->id_1);
+
+    if ( habilidades_b_vencedora != NULL)
+        cjto_destroi(habilidades_b_vencedora);
+    
+    if ((w->n_compostos_v) && (ev->tempo % 2500 == 0))
+    {
+        struct heroi *heroi_morto = NULL;
+        int maior_xp = -1;
+
+        for (int i=0; i < w->n_herois; i++)
+            if (w->herois[i]->base == bmp)
+            {   
+                //bom comentar
+                w->herois[i]->xp++; 
+                if(w->herois[i]->xp > maior_xp)
+                {    
+                    heroi_morto = w->herois[i];
+                    maior_xp = heroi_morto->xp;
+                }
+            }
+        //caso a base mais proxima nao for vazia
+        if (heroi_morto)
+        {
+            w->n_compostos_v--;
+            w->bases[bmp]->missoes++;
+            w->n_missoes_concluidas++;
+
+            if(w->missoes[ev->id_1]->tentativas < w->tent_min)
+                w->tent_min = w->missoes[ev->id_1]->tentativas;
+            
+            ev->id_2 = ev->id_1;
+            ev->id_1 = heroi_morto->id;
+            heroi_morto->xp--; //talvez nao precise disso
+            fprio_insere(w->lef,ev,EV_MORRE,ev->tempo);
+            return;
+        }
+    }
+
+    ev->tempo = ev->tempo + (24 * 60);
+
+    fprio_insere(w->lef,ev,EV_MISSAO,ev->tempo);
 }
 
 void evento_fim(struct mundo *w, struct evento *ev)
 {
-    printf("cabo");
+    struct heroi *h;
+    struct base *b;
+    double porcentagem_missoes;
+    int qnt_mortos = 0;
+    printf("%6d: FIM\n",ev->tempo);
+    
+    //imprime estatisticas dos herois
+    for(int i=0; i < w->n_herois; i++)
+    {
+        h = w->herois[i];
+        if(h->morto)
+        {
+            printf("HEROI %2d MORTO PAC %3d VEL %4d EXP %4d HABS [ ",h->id,h->paciencia,h->velocidade,h->xp);
+            qnt_mortos++;
+        }
+        else
+            printf("HEROI %2d VIVO  PAC %3d VEL %4d EXP %4d HABS [ ",h->id,h->paciencia,h->velocidade,h->xp);
+        cjto_imprime(h->habilidades);
+        printf(" ]\n");
+    }
+
+    //imprime estatisticas das bases
+    for(int i=0; i < w->n_bases; i++)
+    {
+        b = w->bases[i];
+        printf("BASE %2d LOT %2d FILA MAX %2d MISSOES %d\n",b->id,b->n_max,b->f_max,b->missoes);
+    }
+    printf("EVENTOS TRATADOS: %d\n",w->ev_tratados);
+    porcentagem_missoes = ((float)w->n_missoes_concluidas/w->n_missoes) * 100;
+    printf("MISSOES CUMPRIDAS: %d/%d (%.1f%%)\n",w->n_missoes_concluidas,w->n_missoes,porcentagem_missoes);
+    printf("TENTATIVAS/MISSAO: MIN %d, MAX %d, MEDIA %.1f\n",w->tent_min,w->tent_max,(float)w->total_tent / w->n_missoes);
+    printf("TAXA MORTALIDADE: %.1f%%\n",((float) qnt_mortos / w->n_herois) * 100);
     free(ev);
 }
 

@@ -15,11 +15,12 @@ void inicializa_heroi(struct heroi *h, int i)
 
     h->id = i;
     h->xp = 0;
+    h->base = -1;
     h->paciencia = aleat(0,100); 
     h->velocidade = aleat(50,5000);
     qnt_habilidades = aleat(1,3);
     h->habilidades = cjto_aleat(qnt_habilidades,N_HABILIDADES);
-
+    h->morto = 0;
 }
 
 // função que define as características de uma base
@@ -29,6 +30,8 @@ void inicializa_base(struct base *b, int i)
     b->local_base.x = aleat(0,N_TAMANHO_DO_MUNDO-1);
     b->local_base.y = aleat(0,N_TAMANHO_DO_MUNDO-1);
     b->n_max = aleat(3,10);
+    b->f_max = 0;
+    b->missoes = 0;
     b->h_presentes = cjto_cria(N_HEROIS);
     b->f_espera = fila_cria();
 }
@@ -43,6 +46,7 @@ void inicializa_missao(struct missao *m, int i)
     m->local_missao.y = aleat(0,N_TAMANHO_DO_MUNDO-1);
     qnt_habilidades = aleat(6,10);
     m->habilidades = cjto_aleat(qnt_habilidades,N_HABILIDADES);
+    m->tentativas = 0;
 
 }
 
@@ -97,6 +101,8 @@ struct mundo *inicializa_mundo()
     if(!(w = malloc(sizeof(struct mundo))))
 		return NULL;
 
+    
+    w->ev_tratados = 0;
     w->min_atual = T_INICIO;
     w->tam_mundo.x = N_TAMANHO_DO_MUNDO;
     w->tam_mundo.y = N_TAMANHO_DO_MUNDO;
@@ -129,6 +135,10 @@ struct mundo *inicializa_mundo()
     }
 
     //cria as missões
+    w->n_missoes_concluidas = 0;
+    w->tent_min = 366;
+    w->tent_max = 0;
+    w->total_tent = 0;
     w->n_missoes = N_MISSOES;
     if(!(w->missoes = malloc(w->n_missoes * sizeof(struct missao*))))
         return NULL;

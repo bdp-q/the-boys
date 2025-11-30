@@ -13,7 +13,7 @@ void simula_mundo(struct mundo *w)
     while (!fim)
     { 
         ev_atual = fprio_retira(w->lef,&id_evento,&tempo);
-        
+        w->ev_tratados++;
         switch (id_evento)
         {
         case EV_CHEGA:

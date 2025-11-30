@@ -17,8 +17,8 @@
 // struct que guarda informacoes importantes de um evento
 struct evento {
     int tempo;  // o momento em que o evento ira acontecer
-    int id_1;   // um id ou do heroi ou da missao ou da base que esta atrelado a esse evento
-    int id_2;   // outro id igual ao anterior para eventos que usam duas entidades
+    int id_1;   // um id ou do heroi ou da missao que esta atrelado a esse evento
+    int id_2;   // outro id igual ao anterior para eventos que usam duas entidades (normalmente a base)
 };
 
 // chama o evento do heroi chegando a uma base e decide se ele ira tentar entrar ou ir embora.
@@ -36,15 +36,19 @@ void evento_avisa(struct mundo *w, struct evento *ev);
 // chama o evento em que o heroi entra na base e decide quanto tempo ficara la
 void evento_entra(struct mundo *w, struct evento *ev);
 
+// chama o evento em que o heroi sai da base e vai viajar
 void evento_sai(struct mundo *w, struct evento *ev);
 
+// chama o evento em que o heroi esta viajando e chegara em alguma base em algum momento
 void evento_viaja(struct mundo *w, struct evento *ev);
 
+// chama o evento em que o heroi morre, avisando o porteiro de sua base e apagando sua existencia
 void evento_morre(struct mundo *w, struct evento *ev);
 
+// chama o evento que ocasiona uma missao, vendo se ela sera concluida ou sera adiada
 void evento_missao(struct mundo *w, struct evento *ev);
 
+// chama o evento que acaba com a simulacao e mostra suas estatisticas
 void evento_fim(struct mundo *w, struct evento *ev);
-
 
 #endif

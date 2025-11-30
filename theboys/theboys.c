@@ -3,6 +3,7 @@
 
 // seus #includes vão aqui
 #include <stdlib.h>
+#include <time.h>
 #include "entidades.h"
 #include "universo.h"
 #include "simulacao.h"
@@ -15,7 +16,7 @@ int main ()
 {
   // iniciar o mundo
   struct mundo *w;
-  srand(11231321);
+  srand(time(NULL));
   w = inicializa_mundo();
   // executar o laço de simulação
   simula_mundo(w);

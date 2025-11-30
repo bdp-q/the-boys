@@ -224,6 +224,7 @@ void evento_missao(struct mundo *w, struct evento *ev)
         if(w->missoes[ev->id_1]->tentativas < w->tent_min)
             w->tent_min = w->missoes[ev->id_1]->tentativas;
 
+        cjto_destroi(habilidades_b_vencedora);
         free(ev);
         return;
     }
